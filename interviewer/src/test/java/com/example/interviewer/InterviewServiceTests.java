@@ -5,7 +5,9 @@ import com.example.interviewer.dto.InterviewResponse;
 import com.example.interviewer.dto.StartInterviewRequest;
 import com.example.interviewer.exception.InterviewAlreadyCompleteException;
 import com.example.interviewer.integration.LlmClient;
+import com.example.interviewer.integration.LlmConstants;
 import com.example.interviewer.repository.SessionRepository;
+import com.example.interviewer.domain.Message;
 import com.example.interviewer.service.InterviewService;
 import com.example.interviewer.service.PromptService;
 import com.example.interviewer.service.TranscriptExportService;
@@ -64,15 +66,20 @@ class InterviewServiceTests {
         ReflectionTestUtils.setField(interviewService, "maxQuestions", 4);
 
         lenient().when(promptService.buildSystemPrompt(anyString()))
-                .thenReturn(new com.example.interviewer.domain.Message("system", "You are an interviewer."));
+                .thenReturn(Message.builder()
+                        .role(LlmConstants.ROLE_SYSTEM)
+                        .content("You are an interviewer.")
+                        .build()
+                    );
     }
 
     @Test
     void startInterview_shouldCreateSessionAndReturnFirstQuestion() {
         when(llmClient.generateResponse(anyList())).thenReturn(MOCK_QUESTION);
 
-        StartInterviewRequest request = new StartInterviewRequest();
-        request.setTopic("Programming");
+        StartInterviewRequest request = StartInterviewRequest.builder()
+                .topic("Programming")
+                .build();
 
         InterviewResponse response = interviewService.startInterview(request);
 
@@ -152,8 +159,9 @@ class InterviewServiceTests {
         when(sessionRepository.findById(anyString()))
                 .thenAnswer(inv -> Optional.ofNullable(saved[0]));
 
-        StartInterviewRequest request = new StartInterviewRequest();
-        request.setTopic("Programming");
+        StartInterviewRequest request = StartInterviewRequest.builder()
+                .topic("Programming")
+                .build();
 
         return interviewService.startInterview(request).getSessionId();
     }

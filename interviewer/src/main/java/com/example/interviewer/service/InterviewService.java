@@ -8,6 +8,7 @@ import com.example.interviewer.dto.SummaryData;
 import com.example.interviewer.exception.InterviewAlreadyCompleteException;
 import com.example.interviewer.exception.InterviewSessionNotFoundException;
 import com.example.interviewer.integration.LlmClient;
+import com.example.interviewer.integration.LlmConstants;
 import com.example.interviewer.repository.SessionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -37,14 +38,14 @@ public class InterviewService {
 
         session.getHistory().add(promptService.buildSystemPrompt(topic));
         session.getHistory().add(Message.builder()
-                .role("user")
-                .content("Start the interview.")
+                .role(LlmConstants.ROLE_USER)
+                .content(LlmConstants.START_INTERVIEW)
                 .build()
             );
 
         String firstQuestion = llmClient.generateResponse(session.getHistory());
         session.getHistory().add(Message.builder()
-                .role("assistant")
+                .role(LlmConstants.ROLE_ASSISTANT)
                 .content(firstQuestion)
                 .build()
             );
@@ -65,20 +66,20 @@ public class InterviewService {
         }
 
         session.getHistory().add(Message.builder()
-                .role("user")
+                .role(LlmConstants.ROLE_USER)
                 .content(userAnswer)
                 .build()
             );
 
         String nextResponse = llmClient.generateResponse(session.getHistory());
         session.getHistory().add(Message.builder()
-                .role("assistant")
+                .role(LlmConstants.ROLE_ASSISTANT)
                 .content(nextResponse)
                 .build()
             );
 
         long questionCount = session.getHistory().stream()
-                .filter(m -> "assistant".equals(m.getRole()))
+                .filter(m -> LlmConstants.ROLE_ASSISTANT.equals(m.getRole()))
                 .count() - 1;
 
         boolean isLastQuestion = questionCount >= maxQuestions;
@@ -114,11 +115,11 @@ public class InterviewService {
             return objectMapper.readValue(cleaned, SummaryData.class);
         } catch (Exception e) {
             log.error("Failed to parse summary JSON, returning fallback. Raw: {}", raw, e);
-            SummaryData fallback = new SummaryData();
-            fallback.setOverview(raw);
-            fallback.setSentiment("neutral");
-            fallback.setSentimentScore(0.0);
-            return fallback;
+            return SummaryData.builder()
+                    .overview(raw)
+                    .sentiment("neutral")
+                    .sentimentScore(0.0)
+                    .build();
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.interviewer.service;
 
 import com.example.interviewer.domain.Message;
+import com.example.interviewer.integration.LlmConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +23,16 @@ public class PromptService {
     public Message buildSystemPrompt(String topic) {
         String formattedPrompt = String.format(systemPromptTemplate, topic, maxQuestions);
 
-        return Message.builder().role("system").content(formattedPrompt).build();
+        return Message.builder()
+                .role(LlmConstants.ROLE_SYSTEM)
+                .content(formattedPrompt)
+                .build();
     }
 
     public Message buildSummaryPrompt() {
-        return Message.builder().role("user").content(summaryPromptTemplate).build();
+        return Message.builder()
+                .role(LlmConstants.ROLE_USER)
+                .content(summaryPromptTemplate)
+                .build();
     }
 }

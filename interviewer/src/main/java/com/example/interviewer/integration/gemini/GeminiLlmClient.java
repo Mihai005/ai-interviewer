@@ -33,19 +33,22 @@ public class GeminiLlmClient implements LlmClient {
     @Override
     public String generateResponse(List<Message> history) {
         String systemText = history.stream()
-                .filter(m -> m.getRole().equals("system"))
+                .filter(m -> LlmConstants.ROLE_SYSTEM.equals(m.getRole()))
                 .map(Message::getContent)
                 .findFirst()
                 .orElse("");
 
         GeminiRequest.SystemInstruction systemInstruction = GeminiRequest.SystemInstruction.builder()
-                .parts(List.of(GeminiRequest.Part.builder().text(systemText).build()))
+                .parts(List.of(GeminiRequest.Part.builder()
+                        .text(systemText).build()
+                        ))
                 .build();
 
         List<GeminiRequest.Content> apiMessages = history.stream()
-                .filter(m -> !m.getRole().equals("system"))
+                .filter(m -> !m.getRole().equals(LlmConstants.ROLE_SYSTEM))
                 .map(m -> {
-                    String geminiRole = m.getRole().equals("assistant") ? "model" : "user";
+                    String geminiRole = LlmConstants.ROLE_ASSISTANT.equals(m.getRole()) ?
+                            "model" : LlmConstants.ROLE_USER;
                     return GeminiRequest.Content.builder()
                             .role(geminiRole)
                             .parts(List.of(GeminiRequest.Part.builder().text(m.getContent()).build()))
