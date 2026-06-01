@@ -1,6 +1,7 @@
 package com.example.interviewer.integration.groq;
 
 import com.example.interviewer.domain.Message;
+import com.example.interviewer.exception.ExceptionMessages;
 import com.example.interviewer.exception.LlmResponseException;
 import com.example.interviewer.integration.LlmClient;
 import com.example.interviewer.integration.LlmConstants;
@@ -60,6 +61,6 @@ public class GroqLlmClient implements LlmClient {
 
         throw new LlmResponseException(
                 LlmResponseException.Provider.GROQ,
-                "Empty response from Groq API");
+                ExceptionMessages.EMPTY_RESPONSE_FROM_GROQ_API);
     }
 }

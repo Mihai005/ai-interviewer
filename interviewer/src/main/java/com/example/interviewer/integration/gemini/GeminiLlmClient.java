@@ -1,6 +1,7 @@
 package com.example.interviewer.integration.gemini;
 
 import com.example.interviewer.domain.Message;
+import com.example.interviewer.exception.ExceptionMessages;
 import com.example.interviewer.exception.LlmResponseException;
 import com.example.interviewer.integration.LlmClient;
 import com.example.interviewer.integration.LlmConstants;
@@ -81,6 +82,6 @@ public class GeminiLlmClient implements LlmClient {
 
         throw new LlmResponseException(
                 LlmResponseException.Provider.GEMINI,
-                "Received empty response from Gemini API");
+                ExceptionMessages.EMPTY_RESPONSE_FROM_GEMINI_API);
     }
 }

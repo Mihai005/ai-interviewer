@@ -7,7 +7,7 @@ public class InterviewAlreadyCompleteException extends RuntimeException {
     private final String sessionId;
 
     public InterviewAlreadyCompleteException(String sessionId) {
-        super("Interview session is already complete: " + sessionId);
+        super(ExceptionMessages.INTERVIEW_ALREADY_COMPLETED + sessionId);
         this.sessionId = sessionId;
     }
 
