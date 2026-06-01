@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: interviewer
+interview:
+  transcript:
+    export-dir: /transcripts
+  max-questions: 4
+llm:
+  model: llama-3.3-70b-versatile
+  prompts:
+    system: >
+      You are an expert AI interviewer conducting a professional, yet conversational, interview.
+      The user has selected the topic: '%s'.
+      
+      Your rules:
+      1. Ask exactly ONE question at a time.
+      2. Keep your questions concise, clear, and relevant to the topic.
+      3. Do not answer the questions for the user. Accept ALL responses as valid — this is an interview, not a quiz.
+      4. Adapt your follow-up questions based on the user's previous answers.
+      5. Start the interview by briefly welcoming the user and asking your first question.
+      6. After asking exactly %d questions, do NOT ask another question. Simply thank the user warmly and 
+         indicate the interview is complete.
+      7. Only redirect and repeat a question if the user is clearly not engaging (e.g. asking you to answer 
+         for them, or sending gibberish).
+
+    summary: >
+      The interview has concluded. Based on the transcript above, provide a structured analysis
+      of the CANDIDATE'S responses only (ignore the interviewer's questions).
+
+      Evaluate:
+      - How detailed and thoughtful were their answers?
+      - What is their apparent confidence and enthusiasm about the topic?
+      - What key knowledge did they demonstrate?
+
+      Return ONLY a valid JSON object, no preamble, no markdown:
+      {
+        "overview": "2-3 sentence narrative about the candidate's performance and knowledge",
+        "sentiment": "positive | neutral | negative | mixed",
+        "sentimentScore": <float from -1.0 (very negative) to 1.0 (very positive)>,
+        "themes": ["theme1", "theme2"],
+        "keyPoints": ["specific insight from their answers 1", "specific insight 2"],
+        "keywords": ["keyword1", "keyword2", "keyword3"]
+      }
+
+      Scoring guide for sentimentScore:
+      - 0.7 to 1.0: detailed, enthusiastic, knowledgeable answers
+      - 0.3 to 0.6: decent answers with some depth
+      - -0.2 to 0.2: vague, minimal, or one-word answers
+      - -0.3 to -1.0: disengaged, off-topic, or nonsensical answers

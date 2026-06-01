@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interviewer</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.10/dist/vuetify.min.css" rel="stylesheet">
+    <style>
+        .chat-container { height: 50vh; min-height: 400px; overflow-y: auto; background-color: #f8f9fa; border-radius: 8px; padding: 16px; }
+        .message-bubble { max-width: 80%; padding: 12px 16px; border-radius: 16px; margin-bottom: 8px; display: inline-block; white-space: pre-wrap; }
+        .user-message { background-color: #0d6efd; color: white; border-bottom-right-radius: 4px; }
+        .ai-message { background-color: #e9ecef; color: #212529; border-bottom-left-radius: 4px; }
+        .summary-card { background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border-left: 4px solid #1565c0; border-radius: 12px; padding: 16px; margin-top: 8px; }
+        .summary-card h3 { color: #1565c0; margin-bottom: 12px; font-size: 1rem; }
+        .summary-card .summary-row { margin-bottom: 8px; font-size: 0.9rem; }
+        .summary-card .label { font-weight: 600; color: #424242; }
+        .chip-tag { display: inline-block; background: #e3f2fd; color: #1565c0; border-radius: 12px; padding: 2px 10px; margin: 2px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <v-app>
+        <v-main class="bg-grey-lighten-4">
+            <v-container class="fill-height d-flex align-center justify-center">
+                <v-card width="100%" max-width="800" elevation="4" class="rounded-lg">
+                    <v-toolbar color="primary" dark>
+                        <v-toolbar-title>AI Interviewer</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                        <v-chip v-if="sessionId && !completed" color="white" variant="outlined" size="small">Session Active</v-chip>
+                        <v-chip v-if="completed" color="success" variant="flat" size="small">
+                            <v-icon start>mdi-check-circle</v-icon>Completed
+                        </v-chip>
+                    </v-toolbar>
+
+                    <v-card-text v-if="!sessionId" class="pa-6 text-center">
+                        <v-icon size="64" color="primary" class="mb-4">mdi-robot-outline</v-icon>
+                        <h2 class="text-h5 font-weight-bold mb-2">Start a New Interview</h2>
+                        <p class="text-body-1 text-grey-darken-1 mb-6">Enter a topic below to begin your AI-powered evaluation.</p>
+
+                        <v-alert v-if="startError" type="error" variant="tonal" class="mb-4 text-left">
+                            {{ startError }}
+                        </v-alert>
+
+                        <v-form @submit.prevent="startInterview">
+                            <v-text-field
+                                    v-model="topic"
+                                    label="Interview Topic (e.g., AI in the workplace)"
+                                    variant="outlined"
+                                    :loading="loading"
+                                    :disabled="loading"
+                                    append-inner-icon="mdi-arrow-right-circle"
+                                    @click:append-inner="startInterview"
+                            ></v-text-field>
+                        </v-form>
+                    </v-card-text>
+
+                    <v-card-text v-else class="pa-4">
+                        <div class="chat-container d-flex flex-column" ref="chatBox">
+                            <template v-for="(msg, index) in messages" :key="index">
+                                <div v-if="msg.isSummary" class="summary-card">
+                                    <h3><v-icon size="18" class="mr-1">mdi-clipboard-text</v-icon>Interview Summary</h3>
+                                    <div class="summary-row">
+                                        <span class="label">Overview: </span>{{ msg.summary.overview }}
+                                    </div>
+                                    <div class="summary-row">
+                                        <span class="label">Sentiment: </span>{{ msg.summary.sentiment }}
+                                        ({{ msg.summary.sentimentScore > 0 ? '+' : '' }}{{ msg.summary.sentimentScore?.toFixed(1) }})
+                                    </div>
+                                    <div class="summary-row">
+                                        <span class="label">Themes: </span>
+                                        <span v-for="t in msg.summary.themes" :key="t" class="chip-tag">{{ t }}</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span class="label">Key Points:</span>
+                                        <ul style="margin: 4px 0 0 16px;">
+                                            <li v-for="kp in msg.summary.keyPoints" :key="kp">{{ kp }}</li>
+                                        </ul>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span class="label">Keywords: </span>
+                                        <span v-for="kw in msg.summary.keywords" :key="kw" class="chip-tag">{{ kw }}</span>
+                                    </div>
+                                </div>
+                                <div v-else class="d-flex w-100 mb-2" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+                                    <div class="message-bubble text-body-1" :class="msg.role === 'user' ? 'user-message' : 'ai-message'">
+                                        {{ msg.content }}
+                                    </div>
+                                </div>
+                            </template>
+
+                            <div v-if="loading" class="d-flex w-100 mb-2 justify-start">
+                                <div class="message-bubble ai-message d-flex align-center">
+                                    <v-progress-circular indeterminate size="20" width="2" color="primary" class="mr-2"></v-progress-circular>Typing...
+                                </div>
+                            </div>
+                        </div>
+
+                        <v-divider class="my-4"></v-divider>
+
+                        <div v-if="completed" class="text-center pa-2">
+                            <v-icon color="success" class="mr-1">mdi-check-circle-outline</v-icon>
+                            <span class="text-body-2 text-grey-darken-1">Interview complete. Your transcript has been saved.</span>
+                            <div class="mt-3">
+                                <v-btn
+                                        color="primary"
+                                        variant="outlined"
+                                        prepend-icon="mdi-restart"
+                                        @click="resetInterview"
+                                >
+                                    Start New Interview
+                                </v-btn>
+                            </div>
+                        </div>
+
+                        <v-form v-else @submit.prevent="sendMessage">
+                            <v-textarea
+                                    v-model="userAnswer"
+                                    label="Type your answer..."
+                                    variant="outlined"
+                                    rows="2"
+                                    auto-grow
+                                    hide-details
+                                    :disabled="loading"
+                                    @keydown.enter.prevent="sendMessage"
+                            >
+                                <template v-slot:append-inner>
+                                    <v-btn icon="mdi-send" variant="text" color="primary" :loading="loading" @click="sendMessage"></v-btn>
+                                </template>
+                            </v-textarea>
+                        </v-form>
+                    </v-card-text>
+                </v-card>
+            </v-container>
+        </v-main>
+    </v-app>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.10/dist/vuetify.min.js"></script>
+<script>
+    const { createApp, ref, nextTick } = Vue;
+    const { createVuetify } = Vuetify;
+    const vuetify = createVuetify();
+
+    createApp({
+        setup() {
+            const topic = ref('');
+            const sessionId = ref(null);
+            const messages = ref([]);
+            const userAnswer = ref('');
+            const loading = ref(false);
+            const chatBox = ref(null);
+            const startError = ref('');
+            const completed = ref(false);
+
+            const scrollToBottom = async () => {
+                await nextTick();
+                if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight;
+            };
+
+            const startInterview = async () => {
+                if (!topic.value.trim()) return;
+                loading.value = true;
+                startError.value = '';
+                try {
+                    const response = await fetch('/api/interviews/start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic: topic.value })
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        startError.value = errorData.error ||'An error occurred.';
+                        return;
+                    }
+                    const data = await response.json();
+                    sessionId.value = data.sessionId;
+                    messages.value.push({ role: 'ai', content: data.question });
+                } catch (error) {
+                    startError.value = 'Failed to connect to the server.';
+                } finally {
+                    loading.value = false;
+                    await scrollToBottom();
+                }
+            };
+
+            const sendMessage = async () => {
+                const text = userAnswer.value.trim();
+                if (!text || loading.value || completed.value) return;
+
+                messages.value.push({ role: 'user', content: text });
+                userAnswer.value = '';
+                loading.value = true;
+                await scrollToBottom();
+
+                try {
+                    const response = await fetch(`/api/interviews/${sessionId.value}/answer`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: text
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        messages.value.push({ role: 'ai', content: errorData.error || 'An error occurred.' });
+                        return;
+                    }
+                    const data = await response.json();
+
+                    if (data.completed) {
+                        messages.value.push({ role: 'ai', content: data.question });
+                        messages.value.push({ isSummary: true, summary: data.summary });
+                        completed.value = true;
+                    } else {
+                        messages.value.push({ role: 'ai', content: data.question });
+                    }
+                } catch (error) {
+                    messages.value.push({ role: 'ai', content: 'Connection error. Please try again.' });
+                } finally {
+                    loading.value = false;
+                    await scrollToBottom();
+                }
+            };
+
+            const resetInterview = () => {
+                topic.value = '';
+                sessionId.value = null;
+                messages.value = [];
+                userAnswer.value = '';
+                completed.value = false;
+                startError.value = '';
+            };
+
+            return { topic, sessionId, messages, userAnswer, loading, chatBox, startError, completed, startInterview,
+                sendMessage, resetInterview };
+        }
+    }).use(vuetify).mount('#app');
+</script>
+</body>
+</html>
