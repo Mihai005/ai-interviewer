@@ -1,14 +1,16 @@
 package com.example.interviewer.integration.gemini;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.extern.jackson.Jacksonized;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Builder
-@Jacksonized
+@NoArgsConstructor
+@AllArgsConstructor
 public class GeminiRequest {
 
     private SystemInstruction systemInstruction;
@@ -17,14 +19,16 @@ public class GeminiRequest {
 
     @Data
     @Builder
-    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class SystemInstruction {
         private List<Part> parts;
     }
 
     @Data
     @Builder
-    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Content {
         private String role;
         private List<Part> parts;
@@ -32,14 +36,16 @@ public class GeminiRequest {
 
     @Data
     @Builder
-    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Part {
         private String text;
     }
 
     @Data
     @Builder
-    @Jacksonized
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class GenerationConfig {
         private Integer maxOutputTokens;
     }
