@@ -1,6 +1,6 @@
 # AI Interviewer
 
-An AI-powered interview simulation tool featuring a decoupled architecture built with a **Spring Boot** backend, **Vue.js (Vuetify)** frontend, and integrated with the **Google Gemini LLM** API for intelligent, dynamic follow-up questioning.
+An AI-powered interview simulation tool featuring a decoupled architecture built with a **Spring Boot** backend, **Vue.js (Vuetify)** frontend, and integrated with the **Groq LLM** API for intelligent, dynamic follow-up questioning.
 
 Quick Start Setup
 
