@@ -13,3 +13,10 @@ Edit the .env file in the root of the project with:
 
 ```text
 LLM_API_KEY=your_api_key_here
+```
+
+### Start
+
+```text
+docker-compose up --build
+```
