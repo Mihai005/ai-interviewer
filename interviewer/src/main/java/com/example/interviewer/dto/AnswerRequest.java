@@ -8,9 +8,9 @@ import lombok.Data;
 
 @Data
 @Builder
-public class StartInterviewRequest {
+public class AnswerRequest {
 
-    @NotBlank(message = ValidationConstants.TOPIC_MUST_NOT_BE_BLANK)
-    @Size(max = ValidationConstants.TOPIC_MAX_LENGTH_VALUE, message = ValidationConstants.TOPIC_MAX_LENGTH)
-    private String topic;
+    @NotBlank(message = ValidationConstants.ANSWER_MUST_NOT_BE_BLANK)
+    @Size(max = ValidationConstants.ANSWER_MAX_LENGTH_VALUE, message = ValidationConstants.ANSWER_MAX_SIZE)
+    private String answer;
 }

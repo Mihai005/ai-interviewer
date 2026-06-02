@@ -1,6 +1,7 @@
 package com.example.interviewer;
 
 import com.example.interviewer.domain.InterviewSession;
+import com.example.interviewer.dto.AnswerRequest;
 import com.example.interviewer.dto.InterviewResponse;
 import com.example.interviewer.dto.StartInterviewRequest;
 import com.example.interviewer.exception.InterviewAlreadyCompleteException;
@@ -94,7 +95,11 @@ class InterviewServiceTests {
         when(llmClient.generateResponse(anyList())).thenReturn(MOCK_QUESTION);
         String sessionId = seedSession();
 
-        InterviewResponse response = interviewService.processAnswer(sessionId, "Java");
+        InterviewResponse response = interviewService.processAnswer(sessionId,
+                AnswerRequest.builder()
+                        .answer("Java")
+                        .build()
+                );
 
         assertThat(response.getQuestion()).isEqualTo(MOCK_QUESTION);
         assertThat(response.isCompleted()).isFalse();
@@ -112,7 +117,11 @@ class InterviewServiceTests {
 
         String sessionId = seedSession();
 
-        InterviewResponse response = interviewService.processAnswer(sessionId, "I use JUnit");
+        InterviewResponse response = interviewService.processAnswer(sessionId,
+                AnswerRequest.builder()
+                        .answer("I use JUnit")
+                        .build()
+                );
 
         assertThat(response.isCompleted()).isTrue();
         assertThat(response.getSummary()).isNotNull();
@@ -127,7 +136,12 @@ class InterviewServiceTests {
         String sessionId = seedSession();
 
         for (int i = 1; i <= 3; i++) {
-            InterviewResponse response = interviewService.processAnswer(sessionId, "answer " + i);
+            InterviewResponse response = interviewService.processAnswer(sessionId,
+                    AnswerRequest.builder()
+                            .answer("answer " + i)
+                            .build()
+                    );
+
             assertThat(response.isCompleted())
                     .as("Should not be complete after answer %d", i)
                     .isFalse();
@@ -144,8 +158,13 @@ class InterviewServiceTests {
         InterviewSession session = sessionRepository.findById(sessionId).get();
         session.setCompleted(true);
 
-        assertThatThrownBy(() -> interviewService.processAnswer(sessionId, "anything"))
-                .isInstanceOf(InterviewAlreadyCompleteException.class);
+        assertThatThrownBy(() -> interviewService.processAnswer(sessionId,
+                AnswerRequest.builder()
+                        .answer("anything")
+                        .build()
+                )
+
+        ).isInstanceOf(InterviewAlreadyCompleteException.class);
     }
 
     private String seedSession() {

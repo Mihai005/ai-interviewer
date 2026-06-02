@@ -50,6 +50,8 @@
                                     variant="outlined"
                                     :loading="loading"
                                     :disabled="loading"
+                                    counter="100"
+                                    maxlength="100"
                                     append-inner-icon="mdi-arrow-right-circle"
                                     @click:append-inner="startInterview"
                             ></v-text-field>
@@ -121,8 +123,10 @@
                                     variant="outlined"
                                     rows="2"
                                     auto-grow
-                                    hide-details
+                                    hide-details="auto"
                                     :disabled="loading"
+                                    counter="500"
+                                    maxlength="500"
                                     @keydown.enter.prevent="sendMessage"
                             >
                                 <template v-slot:append-inner>
@@ -198,8 +202,8 @@
                 try {
                     const response = await fetch(`/api/interviews/${sessionId.value}/answer`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: text
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ answer: text })
                     });
                     if (!response.ok) {
                         const errorData = await response.json();

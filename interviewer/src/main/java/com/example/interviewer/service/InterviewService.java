@@ -2,6 +2,7 @@ package com.example.interviewer.service;
 
 import com.example.interviewer.domain.InterviewSession;
 import com.example.interviewer.domain.Message;
+import com.example.interviewer.dto.AnswerRequest;
 import com.example.interviewer.dto.InterviewResponse;
 import com.example.interviewer.dto.StartInterviewRequest;
 import com.example.interviewer.dto.SummaryData;
@@ -57,13 +58,15 @@ public class InterviewService {
                 .build();
     }
 
-    public InterviewResponse processAnswer(String sessionId, String userAnswer) {
+    public InterviewResponse processAnswer(String sessionId, AnswerRequest request) {
         InterviewSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new InterviewSessionNotFoundException(sessionId));
 
         if (session.isCompleted()) {
             throw new InterviewAlreadyCompleteException(sessionId);
         }
+
+        String userAnswer = request.getAnswer();
 
         session.getHistory().add(Message.builder()
                 .role(LlmConstants.ROLE_USER)
